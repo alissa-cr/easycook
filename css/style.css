@@ -17,11 +17,17 @@
 * { box-sizing: border-box; }
 
 body {
-  font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
-  margin: 0;
-  background: var(--background);
-  color: var(--text);
-  line-height: 1.5;
+    font-family: Arial, sans-serif;
+    margin: 0;
+    /* Creates a subtle diagonal striped background pattern using your current slate/blue tones */
+    background-color: #7289da;
+    background-image: repeating-linear-gradient(
+        45deg,
+        rgba(255, 255, 255, 0.05),
+        rgba(255, 255, 255, 0.05) 15px,
+        transparent 15px,
+        transparent 30px
+    );
 }
 
 main {
