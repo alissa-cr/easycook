@@ -1,6 +1,6 @@
 const STORAGE_KEY = 'mealPlans';
 
-// READ: get all saved plans (returns an empty array if nothing saved yet)
+// get all saved plans (returns an empty array if nothing saved yet)
 function getPlans() {
   const saved = localStorage.getItem(STORAGE_KEY);
   return saved === null ? [] : JSON.parse(saved);

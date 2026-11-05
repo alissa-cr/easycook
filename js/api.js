@@ -25,7 +25,7 @@ async function getMealDetails(id) {
 }
 
 // TheMealDB stores ingredients as strIngredient1...strIngredient20.
-// This loop turns them into one clean array.
+// loop turns them into clean array.
 function getIngredients(meal) {
   const list = [];
   for (let i = 1; i <= 20; i++) {

@@ -220,7 +220,7 @@ async function showDetails(id) {
   }
 }
 
-// Read the inputs, validate them, then show the scaled ingredients
+// Read inputs, validate them,show the scaled ingredients
 function handleScale(ingredients) {
   const orig = Number(document.getElementById('origServings').value);
   const wanted = Number(document.getElementById('newServings').value);
