@@ -1,6 +1,6 @@
 const STORAGE_KEY = 'mealPlans';
 
-// get all saved plans (returns an empty array if nothing saved yet)
+// READ: get all saved plans (returns an empty array if nothing saved yet)
 function getPlans() {
   const saved = localStorage.getItem(STORAGE_KEY);
   return saved === null ? [] : JSON.parse(saved);
@@ -14,7 +14,7 @@ function savePlans(plans) {
 // CREATE: add a new plan
 function addPlan(plan) {
   const plans = getPlans();
-  plan.id = Date.now();                // unique id based on the current time
+  plan.id = Date.now();                // unique id based on current time
   plans.push(plan);
   savePlans(plans);
 }
