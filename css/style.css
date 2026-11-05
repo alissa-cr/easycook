@@ -1,32 +1,277 @@
-body { font-family: Arial, sans-serif; margin: 0; background: #fff8f0; }
-nav { background: #d9480f; padding: 12px 24px; display: flex; align-items: center; gap: 24px; }
-nav h1 { color: white; margin: 0; font-size: 22px; flex: 1; }
-nav a { color: white; text-decoration: none; padding: 6px 12px; border-radius: 6px; }
-nav a.active, nav a:hover { background: rgba(255,255,255,0.25); }
-main { padding: 24px; }
-select { padding: 8px; font-size: 16px; margin-left: 8px; }
-#results { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; margin-top: 16px; }
-.card { background: white; border-radius: 10px; padding: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.15); text-align: center; }
-.card img { width: 100%; border-radius: 8px; }
-.card { cursor: pointer; }
-.card:hover { transform: translateY(-3px); }
-#details { background: white; margin-top: 24px; padding: 16px 24px; border-radius: 10px; }
+/* ===== Colours and settings: change these to make it yours ===== */
+:root {
+  --main: #98cf0c;        /* nav bar, buttons */
+  --main-dark: #756e6b;   /* button hover */
+  --background: #6f85c2;  /* page background */
+  --card: #ffffff;        /* cards and panels */
+  --text: #2b2b2b;
+  --soft-text: #666666;
+  --radius: 12px;
+  --shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+/* Makes the hidden attribute work (used by the Cancel Edit button) */
+[hidden] { display: none !important; }
+
+/* ===== Base ===== */
+* { box-sizing: border-box; }
+
+body {
+  font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+  margin: 0;
+  background: var(--background);
+  color: var(--text);
+  line-height: 1.5;
+}
+
+main {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+h2 { color: var(--main); margin-top: 0; }
+
+/* ===== Navigation bar ===== */
+nav {
+  background: var(--main);
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: var(--shadow);
+}
+nav h1 { color: white; margin: 0; font-size: 24px; flex: 1; }
+nav a {
+  color: white;
+  text-decoration: none;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-weight: 500;
+}
+nav a:hover { background: rgba(255, 255, 255, 0.2); }
+nav a.active { background: white; color: var(--main); }
+
+/* ===== Buttons (shared) ===== */
+button {
+  font-family: inherit;
+  font-size: 15px;
+  padding: 9px 16px;
+  background: var(--main);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+button:hover { background: var(--main-dark); }
+
+/* ===== Inputs (shared) ===== */
+input, select {
+  font-family: inherit;
+  font-size: 15px;
+  padding: 9px 12px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background: white;
+}
+input:focus, select:focus {
+  outline: 2px solid var(--main);
+  border-color: var(--main);
+}
+
+/* ===== Explore page: search bars ===== */
+.search-bar {
+  display: flex;
+  gap: 8px;
+  margin: 10px 0;
+  max-width: 650px;
+}
+.search-bar input { flex: 1; }
+.search-bar button { min-width: 160px; }
+
+main > label { font-weight: 600; margin-right: 6px; }
+#categorySelect { margin: 10px 0; min-width: 220px; }
+
+/* Status / feedback message */
+#message {
+  min-height: 24px;
+  font-weight: 600;
+  color: var(--main);
+  margin: 12px 0;
+}
+
+/* ===== Recipe cards ===== */
+#results {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px;
+}
+.card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 10px;
+  box-shadow: var(--shadow);
+  text-align: center;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.2);
+}
+.card img {
+  width: 100%;
+  height: 190px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+.card h3 { font-size: 17px; margin: 10px 0 6px; }
+
+/* Suggestion badges */
+.badge {
+  display: inline-block;
+  font-weight: bold;
+  border-radius: 20px;
+  padding: 4px 12px;
+  margin: 4px 0;
+}
+.badge.ready { background: #d3f9d8; color: #2b8a3e; }
+.badge.almost { background: #fff3bf; color: #e67700; }
+.missing { font-size: 13px; color: var(--soft-text); margin: 4px 0; }
+
+/* ===== Recipe details ===== */
+#details {
+  background: var(--card);
+  margin-top: 28px;
+  padding: 20px 28px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
 #details:empty { display: none; }
-.scaler { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; margin: 10px 0; }
-.scaler input { padding: 6px; font-size: 16px; width: 70px; }
-.scaler button { padding: 8px 14px; font-size: 16px; background: #d9480f; color: white; border: none; border-radius: 6px; cursor: pointer; }
-#scaleMsg { font-weight: bold; color: #d9480f; }
-.plan-form { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; background: white; padding: 16px; border-radius: 10px; }
-.plan-form label { display: flex; flex-direction: column; font-size: 14px; gap: 4px; }
-.plan-form input, .plan-form select { padding: 8px; font-size: 16px; }
-.plan-form button { padding: 8px 14px; font-size: 16px; background: #d9480f; color: white; border: none; border-radius: 6px; cursor: pointer; }
+#details h2 { font-size: 28px; }
+#details h3 {
+  color: var(--main);
+  border-bottom: 2px solid #ffe3d3;
+  padding-bottom: 4px;
+  margin-top: 24px;
+}
+#details ul { line-height: 1.8; }
+
+/* Serving scaler and add-to-plan areas */
+.scaler {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 16px;
+  margin: 10px 0;
+}
+.scaler label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.scaler input { width: 90px; }
+#scaleMsg, #addMsg { font-weight: bold; color: var(--main); }
+
+/* ===== Meal Planner page ===== */
+.plan-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: flex-end;
+  background: var(--card);
+  padding: 18px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+.plan-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.plan-form input[type="text"] { width: 220px; }
+.plan-form input[type="number"] { width: 100px; }
 #cancelBtn { background: #868e96; }
-#plannerMsg { font-weight: bold; color: #d9480f; }
-.plan-item { display: flex; justify-content: space-between; align-items: center; background: white; margin-top: 12px; padding: 12px 16px; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.15); }
+#cancelBtn:hover { background: #6c757d; }
+
+#plannerMsg {
+  min-height: 24px;
+  font-weight: 600;
+  color: var(--main);
+  margin: 14px 0;
+}
+
+.plan-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--card);
+  margin-top: 12px;
+  padding: 14px 18px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
 .plan-item h3 { margin: 0 0 4px; }
 .plan-item p { margin: 2px 0; }
-.editBtn, .deleteBtn { padding: 6px 12px; border: none; border-radius: 6px; color: white; cursor: pointer; }
+.plan-info { display: flex; align-items: center; gap: 16px; }
+.plan-thumb { width: 80px; height: 80px; object-fit: cover; border-radius: 10px; }
+
 .editBtn { background: #1c7ed6; }
+.editBtn:hover { background: #1864ab; }
 .deleteBtn { background: #e03131; }
-.plan-info { display: flex; align-items: center; gap: 14px; }
-.plan-thumb { width: 70px; height: 70px; object-fit: cover; border-radius: 8px; }
+.deleteBtn:hover { background: #c92a2a; }
+.plan-item button { margin-left: 6px; }
+/* ===== Sidebar layout (categories) ===== */
+.layout {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 24px;
+  margin-top: 20px;
+  align-items: start;
+}
+
+.sidebar {
+  background: #f1f3f5;
+  border-radius: var(--radius);
+  padding: 20px;
+}
+.sidebar h3 { margin: 0 0 14px; color: var(--text); font-size: 20px; }
+
+.category-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0;
+  cursor: pointer;
+}
+.category-item input { width: 18px; height: 18px; accent-color: var(--main); }
+.count { color: var(--soft-text); font-size: 13px; }
+
+.sidebar-buttons { display: flex; gap: 10px; margin-top: 18px; }
+.sidebar-buttons button { flex: 1; }
+
+button.outline {
+  background: white;
+  color: var(--main);
+  border: 2px solid var(--main);
+}
+button.outline:hover { background: #ffe3d3; }
+
+/* Smaller cards so three fit beside the sidebar */
+#results { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); }
+.card img { height: 150px; }
+
+/* Page buttons */
+#pager {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  justify-content: center;
+  margin-top: 20px;
+}
+button:disabled { background: #bbb; cursor: not-allowed; }

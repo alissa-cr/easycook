@@ -1,12 +1,23 @@
-const categorySelect = document.getElementById('categorySelect');
 const messageBox = document.getElementById('message');
 const resultsBox = document.getElementById('results');
 const detailsBox = document.getElementById('details');
+const pager = document.getElementById('pager');
+const categoryList = document.getElementById('categoryList');
 const searchInput = document.getElementById('searchInput');
 const ingredientInput = document.getElementById('ingredientInput');
 const suggestInput = document.getElementById('suggestInput');
 
-// Fill the dropdown when the page loads
+// Stores the meals of every category, e.g. { Beef: [...], Chicken: [...] }
+const categoryMeals = {};
+
+// Pagination settings
+const PAGE_SIZE = 9;
+let currentMeals = [];
+let currentPage = 1;
+
+// ===== Categories sidebar =====
+
+// Build the checkbox list when the page loads
 async function loadCategories() {
   try {
     messageBox.textContent = 'Loading categories...';
@@ -15,11 +26,22 @@ async function loadCategories() {
     // Keep every category except Pork
     const categories = allCategories.filter(cat => cat.strCategory !== 'Pork');
 
-    categories.forEach(cat => {
-      const option = document.createElement('option');
-      option.value = cat.strCategory;
-      option.textContent = cat.strCategory;
-      categorySelect.appendChild(option);
+    // Get the meals of every category once, so we can show counts and filter instantly
+    const results = await Promise.all(
+      categories.map(cat => getMealsByCategory(cat.strCategory))
+    );
+
+    categories.forEach((cat, i) => {
+      const meals = results[i] || [];
+      categoryMeals[cat.strCategory] = meals;
+
+      const row = document.createElement('label');
+      row.className = 'category-item';
+      row.innerHTML = `
+        <input type="checkbox" value="${cat.strCategory}">
+        <span>${cat.strCategory} <span class="count">(${meals.length})</span></span>
+      `;
+      categoryList.appendChild(row);
     });
 
     messageBox.textContent = '';
@@ -28,17 +50,62 @@ async function loadCategories() {
   }
 }
 
-// Shared: draw recipe cards for any list of meals
-function displayMeals(meals, label) {
-  resultsBox.innerHTML = '';
-  detailsBox.innerHTML = '';
+// Apply button: show meals from every ticked category
+function applyCategories() {
+  const ticked = Array.from(document.querySelectorAll('#categoryList input:checked'))
+    .map(box => box.value);
 
-  if (meals === null) {                        // empty results
+  if (ticked.length === 0) {                   // invalid input: nothing ticked
+    resultsBox.innerHTML = '';
+    pager.innerHTML = '';
+    detailsBox.innerHTML = '';
+    messageBox.textContent = 'Please tick at least one category.';
+    return;
+  }
+
+  let combined = [];
+  ticked.forEach(name => {
+    combined = combined.concat(categoryMeals[name]);
+  });
+  displayMeals(combined, ticked.join(', '));
+}
+
+// Clear button: untick everything and empty the results
+function clearCategories() {
+  document.querySelectorAll('#categoryList input').forEach(box => {
+    box.checked = false;
+  });
+  resultsBox.innerHTML = '';
+  pager.innerHTML = '';
+  detailsBox.innerHTML = '';
+  messageBox.textContent = '';
+}
+
+// ===== Showing recipe cards with pages =====
+
+// Shared: start showing any list of meals from page 1
+function displayMeals(meals, label) {
+  detailsBox.innerHTML = '';
+  resultsBox.innerHTML = '';
+  pager.innerHTML = '';
+
+  if (meals === null || meals.length === 0) {  // empty results
     messageBox.textContent = 'No recipes found for "' + label + '".';
     return;
   }
 
-  meals.forEach(meal => {
+  currentMeals = meals;
+  currentPage = 1;
+  showPage();
+}
+
+// Draw the cards for the current page
+function showPage() {
+  resultsBox.innerHTML = '';
+  const start = (currentPage - 1) * PAGE_SIZE;
+  const pageMeals = currentMeals.slice(start, start + PAGE_SIZE);
+
+  pageMeals.forEach(meal => {
     const card = document.createElement('div');
     card.className = 'card';
     card.innerHTML = `
@@ -49,27 +116,39 @@ function displayMeals(meals, label) {
     resultsBox.appendChild(card);
   });
 
-  messageBox.textContent = meals.length + ' recipes found for "' + label + '"';
+  const end = start + pageMeals.length;
+  messageBox.innerHTML = 'Showing <strong>' + (start + 1) + '-' + end +
+    '</strong> of <strong>' + currentMeals.length + '</strong> results';
+
+  showPager();
 }
 
-// Show recipes for the chosen category
-async function showMeals(category) {
-  if (category === '') {                       // invalid input
-    resultsBox.innerHTML = '';
-    messageBox.textContent = 'Please select a category.';
-    return;
-  }
+// Previous / Next buttons
+function showPager() {
+  pager.innerHTML = '';
+  const totalPages = Math.ceil(currentMeals.length / PAGE_SIZE);
+  if (totalPages <= 1) return;                 // only one page, no buttons needed
 
-  try {
-    messageBox.textContent = 'Loading recipes...';
-    const meals = await getMealsByCategory(category);
-    displayMeals(meals, category);
-  } catch (error) {                            // failed API request
-    messageBox.textContent = 'Failed to load recipes. Please try again.';
-  }
+  const prev = document.createElement('button');
+  prev.textContent = 'Previous';
+  prev.disabled = currentPage === 1;
+  prev.addEventListener('click', () => { currentPage--; showPage(); });
+
+  const info = document.createElement('span');
+  info.textContent = 'Page ' + currentPage + ' of ' + totalPages;
+
+  const next = document.createElement('button');
+  next.textContent = 'Next';
+  next.disabled = currentPage === totalPages;
+  next.addEventListener('click', () => { currentPage++; showPage(); });
+
+  pager.appendChild(prev);
+  pager.appendChild(info);
+  pager.appendChild(next);
 }
 
-// Show full recipe details, serving scaler, and add-to-plan form
+// ===== Recipe details, serving scaler, add to plan =====
+
 async function showDetails(id) {
   try {
     messageBox.textContent = 'Loading recipe...';
@@ -126,16 +205,14 @@ async function showDetails(id) {
       <p>${meal.strInstructions}</p>
     `;
 
-    // Event: run the calculation when the Scale button is clicked
     document.getElementById('scaleBtn').addEventListener('click', () => {
       handleScale(ingredients);
     });
-
-    // Event: save this recipe into the meal plan
     document.getElementById('addPlanBtn').addEventListener('click', () => {
       handleAddToPlan(meal);
     });
 
+    // Restore the status line (the Showing... text) after loading
     messageBox.textContent = '';
     detailsBox.scrollIntoView({ behavior: 'smooth' });
   } catch (error) {
@@ -152,7 +229,6 @@ function handleScale(ingredients) {
 
   scaledList.innerHTML = '';
 
-  // Validation: must be whole numbers from 1 to 100
   if (!Number.isInteger(orig) || !Number.isInteger(wanted) || orig < 1 || wanted < 1) {
     scaleMsg.textContent = 'Please enter whole numbers of 1 or more.';
     return;
@@ -172,10 +248,38 @@ function handleScale(ingredients) {
   });
 }
 
-// Search by recipe name
+// Validate the form, then save the recipe as a new meal plan (CREATE)
+function handleAddToPlan(meal) {
+  const day = document.getElementById('addDay').value;
+  const servings = Number(document.getElementById('addServings').value);
+  const addMsg = document.getElementById('addMsg');
+
+  if (day === '') {
+    addMsg.textContent = 'Please select a day.';
+    return;
+  }
+  if (!Number.isInteger(servings) || servings < 1 || servings > 100) {
+    addMsg.textContent = 'Servings must be a whole number from 1 to 100.';
+    return;
+  }
+
+  addPlan({
+    mealId: meal.idMeal,
+    name: meal.strMeal,
+    image: meal.strMealThumb,
+    day: day,
+    servings: servings,
+    notes: ''
+  });
+
+  addMsg.textContent = '"' + meal.strMeal + '" added to your meal plan for ' + day + '!';
+}
+
+// ===== Search, ingredient and suggestions =====
+
 async function handleSearch() {
   const text = searchInput.value.trim();
-  if (text === '') {                           // invalid input
+  if (text === '') {
     messageBox.textContent = 'Please type a recipe name to search.';
     return;
   }
@@ -188,7 +292,6 @@ async function handleSearch() {
   }
 }
 
-// Find recipes by one ingredient
 async function handleIngredient() {
   const text = ingredientInput.value.trim();
   if (text === '') {
@@ -204,15 +307,13 @@ async function handleIngredient() {
   }
 }
 
-// Suggest recipes using the ingredients the user has
 async function handleSuggest() {
   const text = suggestInput.value.trim();
-  if (text === '') {                           // invalid input
+  if (text === '') {
     messageBox.textContent = 'Please type the ingredients you have.';
     return;
   }
 
-  // "Chicken, Garlic" -> ["chicken", "garlic"]
   const userIngredients = text.toLowerCase().split(',')
     .map(s => s.trim())
     .filter(s => s !== '');
@@ -220,16 +321,15 @@ async function handleSuggest() {
   try {
     messageBox.textContent = 'Finding suggestions...';
     resultsBox.innerHTML = '';
+    pager.innerHTML = '';
     detailsBox.innerHTML = '';
 
-    // the API filters by one ingredient only, so use the first one as the starting list
     const meals = await getMealsByIngredient(userIngredients[0].replace(/\s+/g, '_'));
     if (meals === null) {
       messageBox.textContent = 'No suitable recipe found. Try other ingredients.';
       return;
     }
 
-    // check the first 10 recipes only, to keep it fast
     const candidates = meals.slice(0, 10);
     const fullMeals = await Promise.all(candidates.map(m => getMealDetails(m.idMeal)));
 
@@ -250,12 +350,12 @@ async function handleSuggest() {
       }
     });
 
-    if (suggestions.length === 0) {            // fallback
+    if (suggestions.length === 0) {
       messageBox.textContent = 'No suitable recipe found. Try other ingredients.';
       return;
     }
 
-    suggestions.sort((a, b) => b.percent - a.percent);   // best match first
+    suggestions.sort((a, b) => b.percent - a.percent);
     localStorage.setItem('suggestions', JSON.stringify(suggestions));
     displaySuggestions(suggestions);
   } catch (error) {
@@ -280,42 +380,15 @@ function displaySuggestions(suggestions) {
   messageBox.textContent = suggestions.length + ' suggestion(s) found.';
 }
 
-// Events
-categorySelect.addEventListener('change', () => showMeals(categorySelect.value));
+// ===== Events =====
 document.addEventListener('DOMContentLoaded', loadCategories);
+document.getElementById('applyBtn').addEventListener('click', applyCategories);
+document.getElementById('clearBtn').addEventListener('click', clearCategories);
 
 document.getElementById('searchBtn').addEventListener('click', handleSearch);
 document.getElementById('ingredientBtn').addEventListener('click', handleIngredient);
 document.getElementById('suggestBtn').addEventListener('click', handleSuggest);
 
-// Enter key inside the text boxes
 searchInput.addEventListener('keydown', e => { if (e.key === 'Enter') handleSearch(); });
 ingredientInput.addEventListener('keydown', e => { if (e.key === 'Enter') handleIngredient(); });
 suggestInput.addEventListener('keydown', e => { if (e.key === 'Enter') handleSuggest(); });
-
-// Validate the form, then save the recipe as a new meal plan (CREATE)
-function handleAddToPlan(meal) {
-  const day = document.getElementById('addDay').value;
-  const servings = Number(document.getElementById('addServings').value);
-  const addMsg = document.getElementById('addMsg');
-
-  if (day === '') {                                  // invalid input
-    addMsg.textContent = 'Please select a day.';
-    return;
-  }
-  if (!Number.isInteger(servings) || servings < 1 || servings > 100) {
-    addMsg.textContent = 'Servings must be a whole number from 1 to 100.';
-    return;
-  }
-
-  addPlan({
-    mealId: meal.idMeal,
-    name: meal.strMeal,
-    image: meal.strMealThumb,
-    day: day,
-    servings: servings,
-    notes: ''
-  });
-
-  addMsg.textContent = '"' + meal.strMeal + '" added to your meal plan for ' + day + '!';
-}
