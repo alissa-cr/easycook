@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>EasyCook - Meal Planner</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <nav>
+    <h1>EasyCook</h1>
+    <a href="index.html">Explore Recipes</a>
+    <a href="planner.html" class="active">Meal Planner</a>
+  </nav>
+
+  <main>
+  <h2>My Meal Plans</h2>
+
+  <form id="planForm" class="plan-form">
+    <input type="hidden" id="planId">
+
+    <label>Meal name:
+      <input type="text" id="planName" placeholder="e.g. Chicken Congee">
+    </label>
+
+    <label>Day:
+      <select id="planDay">
+        <option value="">-- Select a day --</option>
+        <option>Monday</option>
+        <option>Tuesday</option>
+        <option>Wednesday</option>
+        <option>Thursday</option>
+        <option>Friday</option>
+        <option>Saturday</option>
+        <option>Sunday</option>
+      </select>
+    </label>
+
+    <label>Servings:
+      <input type="number" id="planServings" value="4" min="1">
+    </label>
+
+    <label>Notes:
+      <input type="text" id="planNotes" placeholder="Optional">
+    </label>
+
+    <button type="submit" id="saveBtn">Add Plan</button>
+    <button type="button" id="cancelBtn" hidden>Cancel Edit</button>
+  </form>
+
+  <p id="plannerMsg"></p>
+  <div id="planList"></div>
+</main>
+
+<script src="js/storage.js"></script>
+<script src="js/planner.js"></script>
+</body>
+</html>

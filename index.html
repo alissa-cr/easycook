@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>EasyCook - Explore</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <nav>
+    <h1>EasyCook</h1>
+    <a href="index.html" class="active">Explore Recipes</a>
+    <a href="planner.html">Meal Planner</a>
+  </nav>
+
+  <main>
+    <h2>Explore Recipes</h2>
+
+    <div class="search-bar">
+      <input type="text" id="searchInput" placeholder="Search a recipe (e.g. pasta)">
+      <button id="searchBtn">Search</button>
+    </div>
+
+    <div class="search-bar">
+      <input type="text" id="ingredientInput" placeholder="Ingredient you have (e.g. chicken)">
+      <button id="ingredientBtn">Find by Ingredient</button>
+    </div>
+
+    <div class="search-bar">
+      <input type="text" id="suggestInput" placeholder="All your ingredients, separated by commas">
+      <button id="suggestBtn">Suggest Recipes</button>
+    </div>
+
+    <label for="categorySelect">Choose a category:</label>
+    <select id="categorySelect">
+      <option value="">-- Select a category --</option>
+    </select>
+
+    <p id="message"></p>
+    <div id="results"></div>
+    <div id="details"></div>
+    
+  </main>
+
+  <script src="js/api.js"></script>
+  <script src="js/suggest.js"></script>
+  <script src="js/calc.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/ui.js"></script>
+</body>
+</html>

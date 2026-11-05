@@ -1,0 +1,12 @@
+{
+  "name": "easycook",
+  "version": "1.0.0",
+  "description": "EasyCook - Recipe Dictionary Application",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "electron": "^45.2.2"
+  }
+}
